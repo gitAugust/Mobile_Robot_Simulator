@@ -4,7 +4,7 @@ import math
 
 from PySide2.QtWidgets import QApplication, QMessageBox
 from PySide2.QtUiTools import QUiLoader
-import pyqtgraph as pgg
+import pyqtgraph as pg
 from threading import Thread
 from PySide2.QtCore import Signal, QObject, Qt
 
