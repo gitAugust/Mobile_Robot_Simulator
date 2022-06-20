@@ -7,8 +7,8 @@ class ClassRobot(object):
         self.dt = dt
         self.r = 0.05
         self.l = 0.09
-        self.kr = 0.05
-        self.kl = 0.05
+        self.kr = 0.02
+        self.kl = 0.02
         self.pose = np.array([0, 0, 0])
         self.pose_estimated = self.pose
         self.controller_pd = 1
@@ -71,10 +71,11 @@ class ClassRobot(object):
         dy = goal[1] - self.pose_estimated[1]
         dd = np.sqrt(dx ** 2 + dy ** 2)
         dtheta = math.atan2(dy, dx) - self.pose_estimated[2]
-        if dtheta > math.pi:
-            dtheta = dtheta - 2 * math.pi
-        elif dtheta < -math.pi:
-            dtheta = dtheta + 2 * math.pi
+        dtheta = self._wrap_to_pi(dtheta)
+        # if dtheta > math.pi:
+        #     dtheta = dtheta - 2 * math.pi
+        # elif dtheta < -math.pi:
+        #     dtheta = dtheta + 2 * math.pi
         v_d = dd * self.controller_pd
         w_d = dtheta * self.controller_pt
         w_r = (v_d + self.l * w_d / 2) / self.r
@@ -131,6 +132,7 @@ class ClassRobot(object):
                 delta_theta,
             ]
         )
+        self.pose_estimated[2] = self._wrap_to_pi(self.pose_estimated[2])
 
     def reset(self, dt=0.002):
         self.dt = dt
@@ -144,6 +146,13 @@ class ClassRobot(object):
         self.controller_pt = 10
         self.w_sat = 13
         self.Sigma = np.zeros((3, 3))
+
+    def _wrap_to_pi(self, theta):
+        while theta > math.pi:
+            theta = theta - 2 * math.pi
+        while theta < -math.pi:
+            theta = theta + 2 * math.pi
+        return theta
 
 
 if __name__ == "__main__":

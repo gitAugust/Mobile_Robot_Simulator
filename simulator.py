@@ -103,7 +103,7 @@ class Simulator(object):
                     k = math.sqrt((qyy - qxx) ** 2 + 4 * (qxy) ** 2)
                     quu = (qyy + qxx + k) / 2
                     qvv = (qyy + qxx - k) / 2
-                    s = 5.991  # 95％ confidence interval corrpreating s=5.991
+                    s = 5.991  # 95％ confidence interval corresponding s=5.991
                     a = s * math.sqrt(quu)
                     b = s * math.sqrt(qvv)
                     e = math.atan2(2 * qxy, (qyy - qxx)) / 2
@@ -144,8 +144,8 @@ def get_ellipse(e_x, e_y, a, b, e_angle):
     Args:
             e_x ([type]): [center x]
             e_y ([type]): [center y]
-            a ([type]): [long axis]
-            b ([type]): [short axis]
+            a ([type]): [ellipse axis along x axis]
+            b ([type]): [ellipse axis along y axis]
             e_angle ([type]): [Rotation angle]]
 
     Returns:
