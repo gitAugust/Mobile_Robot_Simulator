@@ -14,7 +14,7 @@ class ClassRobot(object):
         self.controller_pd = 1
         self.controller_pt = 10
         self.w_sat = 13
-        self.Sigma = np.zeros((3, 3))
+        self.estimated_Sigma = np.zeros((3, 3))
 
     def run(self, w_r, w_l):
         """
@@ -42,7 +42,7 @@ class ClassRobot(object):
         )
         Sigma = np.array([[self.kr * abs(w_r), 0], [0, self.kl * abs(w_l)]])
         Q = J @ Sigma @ J.T
-        Noise = np.random.multivariate_normal(np.array([0, 0, 0]).T, Q, (1, 1))
+        Noise = np.random.multivariate_normal(np.array([0, 0, 0]).T, Q, (1))
         Noise = Noise.reshape(3)
 
         self.pose = (
@@ -124,7 +124,7 @@ class ClassRobot(object):
             ]
         )
 
-        self.Sigma = H @ self.Sigma @ H.T + Q
+        self.estimated_Sigma = H @ self.estimated_Sigma @ H.T + Q
         self.pose_estimated = self.pose_estimated + np.array(
             [
                 math.cos(theta) * delta_distance,
@@ -145,7 +145,7 @@ class ClassRobot(object):
         self.controller_pd = 1
         self.controller_pt = 10
         self.w_sat = 13
-        self.Sigma = np.zeros((3, 3))
+        self.estimated_Sigma = np.zeros((3, 3))
 
     def _wrap_to_pi(self, theta):
         while theta > math.pi:
@@ -157,11 +157,11 @@ class ClassRobot(object):
 
 if __name__ == "__main__":
     robot = ClassRobot()
-    dt, w_r, w_l = robot.controller((1, 1))
-    robot.run(w_r, w_l)
-    while dt >= 0.1:
-        dt, w_r, w_l = robot.controller((1, 1))
-        robot.run(w_r, w_l)
-        robot.estimater(w_r, w_l)
-        print(robot.pose)
-        print(robot.pose_estimated)
+    # dt, w_r, w_l = robot.controller((1, 1))
+    # robot.run(w_r, w_l)
+    # while dt >= 0.1:
+    #     dt, w_r, w_l = robot.controller((1, 1))
+    #     robot.run(w_r, w_l)
+    #     robot.estimater(w_r, w_l)
+    #     print(robot.pose)
+    #     print(robot.pose_estimated)

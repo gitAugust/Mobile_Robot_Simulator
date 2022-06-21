@@ -95,22 +95,9 @@ class Simulator(object):
                         pos=(arrow_x, arrow_y),
                     )
 
-                    ellipse_x = self.posedata_estimated[-1, 0]
-                    ellipse_y = self.posedata_estimated[-1, 1]
-                    qxx = self.robot.Sigma[1, 1]
-                    qyy = self.robot.Sigma[2, 2]
-                    qxy = self.robot.Sigma[1, 2]
-                    k = math.sqrt((qyy - qxx) ** 2 + 4 * (qxy) ** 2)
-                    quu = (qyy + qxx + k) / 2
-                    qvv = (qyy + qxx - k) / 2
-                    s = 5.991  # 95％ confidence interval corresponding s=5.991
-                    a = s * math.sqrt(quu)
-                    b = s * math.sqrt(qvv)
-                    e = math.atan2(2 * qxy, (qyy - qxx)) / 2
-                    # print((qyy-qxx)**2+4*(qxy)**2)
-                    # print('qxx=',qxx,'qyy=',qyy,'qxy=',qxy,'\n','k=',k,'quu=',quu,'qvv=',qvv,'\n',a,b,e)
-                    ex_data, ey_data = get_ellipse(ellipse_x, ellipse_y, a, b, -e)
+                    ex_data, ey_data = self._get_ellipse(99)
                     ErrorEllipse = pg.PlotCurveItem(ex_data, ey_data)
+
                     self.ms.data_signal.emit(
                         self.posedata, arrow, self.posedata_estimated, ErrorEllipse
                     )
@@ -118,6 +105,9 @@ class Simulator(object):
                 time.sleep(0.005)
                 i += 1
                 if dt <= 0.1:
+                    print(self.robot.estimated_Sigma.shape)
+                    print("Sigma:", self.robot.estimated_Sigma)
+                    print("estimated_pose:", self.posedata_estimated)
                     self.ms.finished_signal.emit("Finished")
                     break
                 if self.Thread_stop == True:
@@ -137,34 +127,31 @@ class Simulator(object):
         self.posedata = self.robot.pose
         self.posedata_estimated = self.robot.pose_estimated
 
-
-def get_ellipse(e_x, e_y, a, b, e_angle):
-    """
-    Get elliptical trajectory
-    Args:
-            e_x ([type]): [center x]
-            e_y ([type]): [center y]
-            a ([type]): [ellipse axis along x axis]
-            b ([type]): [ellipse axis along y axis]
-            e_angle ([type]): [Rotation angle]]
-
-    Returns:
-            [list]: [trajectory of x,y]
-    """
-    angles_circle = np.arange(0, 2 * np.pi, 0.01)
-    x = []
-    y = []
-    for angles in angles_circle:
-        or_x = a * math.cos(angles)
-        or_y = b * math.sin(angles)
-        length_or = math.sqrt(or_x * or_x + or_y * or_y)
-        or_theta = math.atan2(or_y, or_x)
-        new_theta = or_theta + e_angle
-        new_x = e_x + length_or * math.cos(new_theta)
-        new_y = e_y + length_or * math.sin(new_theta)
-        x.append(new_x)
-        y.append(new_y)
-    return x, y
+    def _get_ellipse(self, p=99):
+        ellipse_x = self.posedata_estimated[-1, 0]
+        ellipse_y = self.posedata_estimated[-1, 1]
+        p = 0.99  # confidence interval
+        s = -2 * math.log(1 - p)
+        sigma = self.robot.estimated_Sigma[0:2, 0:2]
+        [D, V] = np.linalg.eig(sigma * s)
+        angles_circle = np.arange(0, 2 * np.pi, 0.01)
+        ex_data = []
+        ey_data = []
+        for angles in angles_circle:
+            sD = np.sqrt(D)
+            x = (
+                V[0, 0] * sD[0] * math.cos(angles)
+                + V[0, 1] * sD[1] * math.sin(angles)
+                + ellipse_x
+            )
+            y = (
+                V[1, 0] * sD[0] * math.cos(angles)
+                + V[1, 1] * sD[1] * math.sin(angles)
+                + ellipse_y
+            )
+            ex_data.append(x)
+            ey_data.append(y)
+        return ex_data, ey_data
 
 
 if __name__ == "__main__":
